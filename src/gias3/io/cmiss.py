@@ -1,5 +1,5 @@
 """
-FILE: cmissio.py
+FILE: cmiss.py
 LAST MODIFIED: 24-12-2015 
 DESCRIPTION: functions and classes for reading and writing cmiss files:
 
@@ -18,16 +18,15 @@ from numpy import array, arange, loadtxt
 log = logging.getLogger(__name__)
 
 
-# ======================================================================#
-def readIpdataOld(fileName):
+def readIpdataOld(file_name):
     """ reads ipdata file and returns the x y z coords on data points
     and the header if there is one
     """
 
     try:
-        file = open(fileName, 'r')
+        file = open(file_name, 'r')
     except IOError:
-        log.debug('ERROR: readIpdata: unable to open', fileName)
+        log.debug('ERROR: readIpdata: unable to open', file_name)
         return
 
     header = None
@@ -48,13 +47,13 @@ def readIpdataOld(fileName):
     return coords, nodeNumbers, header
 
 
-def readIpdata(fileName, hasHeader=True):
+def readIpdata(file_name, has_header=True):
     """ reads ipdata file and returns the field values of data points,
     data point numbers, and the header if there is one
     """
 
-    with open(fileName, 'r') as f:
-        if hasHeader:
+    with open(file_name, 'r') as f:
+        if has_header:
             header = f.readline()
         else:
             header = None
@@ -68,39 +67,37 @@ def readIpdata(fileName, hasHeader=True):
     return values, nodeNumbers, header
 
 
-# ======================================================================#
-def writeIpdata(d, filename, header=None, nodeNumbers=None):
+def writeIpdata(d, file_name, header=None, node_numbers=None):
     """ write the coordinates of points in 3D space to ipdata file. Each
     row in d is [x,y,z] of a datapoint. filename is a string, header is
     a string. if ex!=False, uses cmConvert to conver to ex formates. ex 
     can be 'data', 'node' or 'both'
     """
 
-    outputFile = open(filename, 'w')
+    outputFile = open(file_name, 'w')
     if header:
         outputFile.write(header + '\n')
 
-    if nodeNumbers is None:
-        nodeNumbers = arange(len(d))
+    if node_numbers is None:
+        node_numbers = arange(len(d))
 
     for i, di in enumerate(d):
-        outputFile.write("%10i %3.10f %3.10f %3.10f 1.0 1.0 1.0\n" % (nodeNumbers[i], di[0], di[1], di[2]))
+        outputFile.write("%10i %3.10f %3.10f %3.10f 1.0 1.0 1.0\n" % (node_numbers[i], di[0], di[1], di[2]))
     outputFile.close()
 
     return
 
 
-# ======================================================================#
-def readIpnode(fileName, extra=False):
+def readIpnode(file_name, extra=False):
     """ reads ipnode node files and returns a list of node parameters,
     if extra=True, also returns a list of whether each parameter is a 
     value or derivative, and a list of the node number of parameter
     """
 
     try:
-        file = open(fileName, 'r')
+        file = open(file_name, 'r')
     except IOError:
-        log.debug('ERROR: ipnode_reader: unable to open', fileName)
+        log.debug('ERROR: ipnode_reader: unable to open', file_name)
         return
 
     parameters = []
@@ -134,8 +131,7 @@ def readIpnode(fileName, extra=False):
         return array(parameters)
 
 
-# ======================================================================#
-def writeIpnode(templateName, writeName, header, data):
+def writeIpnode(template_name, write_name, header, data):
     """ writes mesh parameters in data to an ipnode file based on a 
     template ipnode file
     """
@@ -143,15 +139,15 @@ def writeIpnode(templateName, writeName, header, data):
     s = '%21.14f'
 
     try:
-        template = open(templateName, 'r')
+        template = open(template_name, 'r')
     except IOError:
-        log.debug('ERROR: writeIpnode: unable to open template file', templateName)
+        log.debug('ERROR: writeIpnode: unable to open template file', template_name)
         return
 
     try:
-        writeFile = open(writeName, 'w')
+        writeFile = open(write_name, 'w')
     except IOError:
-        log.debug('ERROR: writeIpnode: unable to open write file', writeName)
+        log.debug('ERROR: writeIpnode: unable to open write file', write_name)
         return
 
     dataCount = 0
@@ -170,8 +166,7 @@ def writeIpnode(templateName, writeName, header, data):
     return
 
 
-# ======================================================================#
-def readExdata(filename, fieldsToRead=None):
+def readExdata(filename, fields_to_read=None):
     """Reads exdata file and returns the descriptions of fields and the 
     field values themselves for each data point. If the fieldsToRead are not
     defined as input list, all fields are returned.
@@ -235,10 +230,10 @@ def readExdata(filename, fieldsToRead=None):
                 values[-1] += [float(x) for x in l.strip().split()]
 
     # organise node values into fields
-    if fieldsToRead is None:
-        fieldsToRead = set(range(1, nFields + 1))
+    if fields_to_read is None:
+        fields_to_read = set(range(1, nFields + 1))
     else:
-        fieldsToRead = set(fieldsToRead)
+        fields_to_read = set(fields_to_read)
 
     values2 = []
     for nodeValues in values:
@@ -246,30 +241,29 @@ def readExdata(filename, fieldsToRead=None):
         vi = 0
         for fi, fn in enumerate(nCompsPerField):
             fieldValues = nodeValues[vi:vi + fn]
-            if fi + 1 in fieldsToRead:
+            if fi + 1 in fields_to_read:
                 values2[-1].append(fieldValues)
             vi += fn
 
     return header, fields, nodes, values2
 
 
-# ======================================================================#
-def writeExdata(templateName, writeName, header, data, fields):
+def writeExdata(template_name, write_name, header, data, fields):
     """ writes data to an exdata file based on a 
     template exdata file
     """
     s = '%.9e'
 
     try:
-        template = open(templateName, 'r')
+        template = open(template_name, 'r')
     except IOError:
-        log.debug('ERROR: writeExdata: unable to open template file', templateName)
+        log.debug('ERROR: writeExdata: unable to open template file', template_name)
         return
 
     try:
-        writeFile = open(writeName, 'w')
+        writeFile = open(write_name, 'w')
     except IOError:
-        log.debug('ERROR: writeExdata: unable to open write file', writeName)
+        log.debug('ERROR: writeExdata: unable to open write file', write_name)
         return
 
     lines = template.readlines()
@@ -306,13 +300,12 @@ def writeExdata(templateName, writeName, header, data, fields):
     return
 
 
-# ======================================================================#
-def writeXYZ(data, filename, header=None):
+def writeXYZ(data, file_name, header=None):
     """ writes 3D coords of point to file. Each line contains the x, y,
     and z coords of a point. Optional head in the 1st line
     """
 
-    fOut = open(filename, 'w')
+    fOut = open(file_name, 'w')
     if header:
         fOut.write(header + '\n')
 
